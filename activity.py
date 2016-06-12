@@ -6,14 +6,20 @@ import ipdb
 class Activities(object):
     '''Advance toolkit for sport activity analyse'''
 
-    def __init__(self, sport=None, track=None):
-        self.sport = sport
+    def __init__(self,
+                name=None,
+                time=None,
+                track=None,
+                version=None,
+                creator=None):
+        self.name = name
+        self.time = time
         self.track = track
 
-    @classmethod
-    def from_gpx(cls, gpx_file=''):
+    @staticmethod
+    def from_gpx(gpx_file=''):
         activity_data = gpx.read(gpx_file)
-        return cls(**activity_data)
+        return Activities(**activity_data)
 
     @classmethod
     def from_tcx(cls, tcx_file=''):
@@ -120,7 +126,7 @@ class gpx(object):
         for seg in trkseg:
             trk_lst.append(gpx._readTrkSeg(seg))
 
-        return {'name': name.text, 'trkseg' :{'size': len(trk_lst), 'lst': trk_lst}}
+        return {'name': name.text, 'track' :{'size': len(trk_lst), 'lst': trk_lst}}
 
 
 
