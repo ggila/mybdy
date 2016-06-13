@@ -9,9 +9,7 @@ class Activities(object):
     def __init__(self,
                 name=None,
                 time=None,
-                track=None,
-                version=None,
-                creator=None):
+                track=None):
         self.name = name
         self.time = time
         self.track = track
@@ -43,21 +41,10 @@ class gpx(object):
         gpx is an XML schema designed as a common GPS data format for software applications.
         This class has read() and write() methods for reading and writing gpx file.
 
-    '''
 
-    _xml_namespace = '{http://www.topografix.com/GPX/1/1}'
-    _func = dict()
+        from gps 1.1 doc:
 
-    class garmin(object):
-        _xml_datetime = '%Y-%m-%dT%H:%M:%S.000Z'
-
-    class strava(object):
-        _xml_datetime= '%Y-%m-%dT%H:%M:%SZ'
-
-    @staticmethod
-    def read(gpx_file):
-        '''
-            from gps 1.1 doc:
+            - gpx is the first tag of the document:
 
             <gpx
             version="1.1 [1]"
@@ -68,20 +55,8 @@ class gpx(object):
                 <trk> trkType </trk> [0..*] 
                 <extensions> extensionsType </extensions> [0..1] 
             </gpx>
-        '''
-        gpx_dict = dict()
-        tree = ET.parse(gpx_file)
-        root = tree.getroot()
-        for e in ('version', 'creator'):
-            gpx_dict[e] = root.attrib[e]
-        meta, trk = list(root)
-        return {**gpx_dict, **gpx._readMetadata(meta), **gpx._readTrk(trk)}
 
-    def _readMetadata(meta):
-        '''
-            from gps 1.1 doc:
-
-            <...> 
+            <metadata> 
                 <name> xsd:string </name> [0..1] 
                 <desc> xsd:string </desc> [0..1] 
                 <author> personType </author> [0..1] 
@@ -92,21 +67,6 @@ class gpx(object):
                 <bounds> boundsType </bounds> [0..1] 
                 <extensions> extensionsType </extensions> [0..1] 
             </metadata>
-
-            note that datetime format depends on creator
-        '''
-        time = meta.find('{}time'.format(gpx._xml_namespace)).text
-        return {'time':datetime.strptime(time, gpx._xml_datetime_garmin)}
-
-    def _getBaliseText(bal):
-        pass
-
-    def _getBaliseAttr(bal):
-        pass
-
-    def _readTrk(trk):
-        '''
-            from gps 1.1 doc:
 
             <trk> 
                 <name> xsd:string </name> [0..1] 
@@ -124,35 +84,63 @@ class gpx(object):
                 <trkpt> wptType </trkpt> [0..*] 
                 <extensions> extensionsType </extensions> [0..1] 
             </trkseg>
-        '''
-        name, trkseg = trk
+    '''
 
+    _xml_namespace = '{http://www.topografix.com/GPX/1/1}'
+
+    class garmin(object):
+        time_format = '%Y-%m-%dT%H:%M:%S.000Z'
+
+    class strava(object):
+        time_format = '%Y-%m-%dT%H:%M:%SZ'
+
+    @staticmethod
+    def read(gpx_file):
+        '''
+            return a dict describing activities
+        '''
+        # parse xml file
+        tree = ET.parse(gpx_file)
+        root = tree.getroot()
+
+        # garmin and strava don't have the same format. gpx tag has an attrib creator which tell us file origin.
+        origin = gpx.strava() if root.attrib['creator'] == 'StravaGPX' else gpx.garmin()
+
+        #unpack xml
+        metadata, trk = list(root)
+        name, trkseg = trk
+        
+        #get info
+        time = gpx._readTime(metadata, origin.time_format)
         trk_lst = []
         for seg in trkseg:
-            trk_lst.append(gpx._readTrkSeg(seg))
+            trk_lst.append(gpx._readTrkSeg(seg, origin.time_format))
 
-        return {'name': name.text, 'track' :{'size': len(trk_lst), 'lst': trk_lst}}
+        return {'name':name.text,
+                'time':time,
+                'track':{'size':len(trkseg), 'lst':trk_lst}}
 
+    def _readTime(meta, time_format):
+        '''
+        '''
+        time = meta.find('{}time'.format(gpx._xml_namespace)).text
+        return {'time':datetime.strptime(time, time_format)}
 
-
-    def _readTrkSeg(trkSeg):
+    def _readTrkSeg(trkSeg, time_format):
 
         elevation, time, hr = trkSeg
 
         trkSegDict = {'elevation': float(elevation.text),
-                        'time': datetime.strptime(time.text, gpx._xml_datetime_garmin),
-                        'hr': (hr[0][0].text)}
+                      'time': datetime.strptime(time.text, time_format),
+                      'hr': (hr[0][0].text)}
 
         return {**trkSegDict, **trkSeg.attrib}
-
-
 
 class tcx(object):
     '''tcx file interface'''
     pass
 
 class test(object):
-
     runs = ["test/run_garmin.gpx",
             "test/run_strava.gpx"]
 
