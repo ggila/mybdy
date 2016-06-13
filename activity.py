@@ -46,8 +46,13 @@ class gpx(object):
     '''
 
     _xml_namespace = '{http://www.topografix.com/GPX/1/1}'
-    _xml_datetime_garmin = '%Y-%m-%dT%H:%M:%S.000Z'
-    _xml_datetime_strava = '%Y-%m-%dT%H:%M:%SZ'
+    _func = dict()
+
+    class garmin(object):
+        _xml_datetime = '%Y-%m-%dT%H:%M:%S.000Z'
+
+    class strava(object):
+        _xml_datetime= '%Y-%m-%dT%H:%M:%SZ'
 
     @staticmethod
     def read(gpx_file):
