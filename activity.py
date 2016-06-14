@@ -42,9 +42,6 @@ class gpx(object):
 
 
         from gps 1.1 doc:
-
-            - gpx is the first tag of the document:
-
             <gpx
             version="1.1 [1]"
             creator="xsd:string [1]"> 
@@ -54,7 +51,7 @@ class gpx(object):
                 <trk> trkType </trk> [0..*] 
                 <extensions> extensionsType </extensions> [0..1] 
             </gpx>
-
+        from gps 1.1 doc:
             <metadata> 
                 <name> xsd:string </name> [0..1] 
                 <desc> xsd:string </desc> [0..1] 
@@ -67,6 +64,7 @@ class gpx(object):
                 <extensions> extensionsType </extensions> [0..1] 
             </metadata>
 
+        from gps 1.1 doc:
             <trk> 
                 <name> xsd:string </name> [0..1] 
                 <cmt> xsd:string </cmt> [0..1] 
@@ -79,6 +77,7 @@ class gpx(object):
                 <trkseg> trksegType </trkseg> [0..*] 
             </trk>
 
+        from gps 1.1 doc:
             <trkseg> 
                 <trkpt> wptType </trkpt> [0..*] 
                 <extensions> extensionsType </extensions> [0..1] 
@@ -95,44 +94,37 @@ class gpx(object):
 
     @staticmethod
     def read(gpx_file):
-        '''
-            return a dict describing activities
-        '''
+        '''return a dict describing activities'''
         # parse xml file
         tree = ET.parse(gpx_file)
         root = tree.getroot()
+        origin = gpx.strava() if root.attrib['creator'] == 'StravaGPX' else gpx.garmin() # garmin and strava don't have the same format. gpx tag has an attrib creator which tell us file origin.
 
-        # garmin and strava don't have the same format. gpx tag has an attrib creator which tell us file origin.
-        origin = gpx.strava() if root.attrib['creator'] == 'StravaGPX' else gpx.garmin()
-
-        #unpack xml
-        metadata, trk = list(root)
-        name, trkseg = trk
+        #unpack xml (for now, we consider only gpx with one track)
+        metadata, (trkName, trkSeg) = list(root)
         
         #get info
         time = gpx._readTime(metadata, origin.time_format)
         trk_lst = []
-        for seg in trkseg:
+        for seg in trkSeg:
             trk_lst.append(gpx._readTrkSeg(seg, origin.time_format))
 
-        return {'name':name.text,
+        return {'origin': origin.__class__.__name__,
+                'name':trkName.text,
                 'time':time,
-                'track':{'size':len(trkseg), 'lst':trk_lst}}
+                'track':{'size':len(trk_lst), 'lst':trk_lst}}
 
     def _readTime(meta, time_format):
-        '''
-        '''
+        '''return datetime from metadata xml element'''
         time = meta.find('{}time'.format(gpx._xml_namespace)).text
-        return {'time':datetime.strptime(time, time_format)}
+        return datetime.strptime(time, time_format)
 
     def _readTrkSeg(trkSeg, time_format):
-
-        elevation, time, hr = trkSeg
-
+        '''setup track points list from trkseg xml element'''
+        elevation, time, *hr = trkSeg
         trkSegDict = {'elevation': float(elevation.text),
-                      'time': datetime.strptime(time.text, time_format),
-                      'hr': (hr[0][0].text)}
-
+                      'time': datetime.strptime(time.text, time_format)}
+        if hr: trkSegDict['hr'] = (hr[0][0].text)
         return {**trkSegDict, **trkSeg.attrib}
 
 class tcx(object):
