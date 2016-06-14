@@ -1,6 +1,5 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime
-import random   # for test
 import ipdb
 
 class Activities(object):
@@ -141,11 +140,6 @@ class tcx(object):
     pass
 
 class test(object):
-    runs = ["test/run_garmin.gpx",
-            "test/run_strava.gpx"]
-
-    swims = ["test/ride_garmin.gpx"]
-
     @classmethod
     def runRand(cls):
         run = random.choice(cls.runs)
