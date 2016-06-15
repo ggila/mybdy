@@ -1,4 +1,5 @@
 import xml.etree.ElementTree as ET
+from collections import namedtuple  #next things to do
 from datetime import datetime
 import ipdb
 
@@ -6,12 +7,16 @@ class Activities(object):
     '''Advance toolkit for sport activity analyse'''
 
     def __init__(self,
-                name=None,
+                origin='manual',
+                name='New',
                 time=None,
                 track=None):
         self.name = name
+        self.origin = origin
         self.time = time
-        self.track = track
+        if track:
+            self.point = [(a['lon'], a['lat']) for a in track['lst']]
+            self.progression = [a['time'] - time for a in track['lst']]
 
     @staticmethod
     def from_gpx(gpx_file=''):
@@ -108,7 +113,7 @@ class gpx(object):
         trk_lst = []
         for seg in trkSeg:
             trk_lst.append(gpx._readTrkSeg(seg, origin.time_format))
-
+        
         return {'origin': origin.__class__.__name__,
                 'name':trkName.text,
                 'time':time,
@@ -119,27 +124,19 @@ class gpx(object):
         time = meta.find('{}time'.format(gpx._xml_namespace)).text
         return datetime.strptime(time, time_format)
 
-    def _readTrkSeg(trkSeg, time_format):
+    def _readTrkSeg(seg, time_format):
         '''setup track points list from trkseg xml element'''
-        elevation, time, *hr = trkSeg
-        trkSegDict = {'elevation': float(elevation.text),
+        lat, lon = float(seg.attrib['lon']), float(seg.attrib['lat'])
+        elevation, time, *hr = seg
+        segDict = {'elevation': float(elevation.text),
                       'time': datetime.strptime(time.text, time_format)}
-        if hr: trkSegDict['hr'] = (hr[0][0].text)
-        return {**trkSegDict, **trkSeg.attrib}
+        segDict['hr'] = int(hr[0][0][0].text)    # this should be change (when new watch, just hr right now)
+        return {**segDict, 'lat':lat, 'lon':lon}
 
 class tcx(object):
     '''tcx file interface'''
     pass
 
-class test(object):
-    @classmethod
-    def runRand(cls):
-        run = random.choice(cls.runs)
-        gpx.read(run)
-
-    @classmethod
-    def runGarmin(cls):
-        run = "test/run_garmin.gpx"
-        return gpx.read(run)
-
-#test.runRand()
+#class geo(object):
+#    @staticmethod
+#    def distance()
