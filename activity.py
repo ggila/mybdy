@@ -3,6 +3,7 @@ from collections import namedtuple, defaultdict
 from geopy import distance
 
 from gpx import gpx
+from tcx import tcx
 
 Point = namedtuple('Point', ['lon', 'lat', 'alt'])
 
@@ -27,8 +28,17 @@ class Activities(object):
         activity_data = gpx.read(gpx_file)
         return Activities(**activity_data)
 
+    @staticmethod
+    def to_gpx(gpx_file=''):
+        pass
+
     @classmethod
     def from_tcx(cls, tcx_file=''):
+        activity_data = tcx.read(gpx_file)
+        return Activities(**activity_data)
+
+    @staticmethod
+    def to_tcx(tcx_file=''):
         pass
 
 #    @property
