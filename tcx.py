@@ -22,10 +22,12 @@ class tcx(object):
         # parse xml file
         tree = ET.parse(tcx_file)
         root = tree.getroot()
-        origin = tcx.strava() if root.attrib['creator'] == 'StravaGPX' else tcx.garmin() # garmin and strava don't have the same format. tcx tag has an attrib creator which tell us file origin.
 
         #unpack xml (for now, we consider only tcx only for swim activity)
-        activity, author = list(root)
+        activities, author = root
+
+        for activity in activies:
+            _readActivity(activity)
         
         #get info
         time = tcx._readTime(metadata, origin.time_format)

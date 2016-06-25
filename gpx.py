@@ -1,6 +1,8 @@
 import xml.etree.ElementTree as ET
 from datetime import datetime
 
+strava_id = ['StravaGPX', 'strava.com Android']
+
 class gpx(object):
     '''
         gpx file interface
@@ -66,7 +68,7 @@ class gpx(object):
         # parse xml file
         tree = ET.parse(gpx_file)
         root = tree.getroot()
-        origin = gpx.strava() if root.attrib['creator'] == 'StravaGPX' else gpx.garmin() # garmin and strava don't have the same format. gpx tag has an attrib creator which tell us file origin.
+        origin = gpx.strava() if root.attrib['creator'] in strava_id else gpx.garmin() # garmin and strava don't have the same format. gpx tag has an attrib creator which tell us file origin.
 
         #unpack xml (for now, we consider only gpx with one track)
         metadata, (trkName, trkSeg) = list(root)
@@ -93,5 +95,6 @@ class gpx(object):
         alt, time, *hr = seg
         segDict = {'alt': float(alt.text),
                       'time': datetime.strptime(time.text, time_format)}
-        segDict['hr'] = int(hr[0][0][0].text)    # this should be change (when new watch, just hr right now)
+        if (hr):            # this should be change (when new watch, just hr right now)
+            segDict['hr'] = int(hr[0][0][0].text)
         return {**segDict, 'lat':lat, 'lon':lon}

@@ -7,7 +7,7 @@ from tcx import tcx
 
 Point = namedtuple('Point', ['lon', 'lat', 'alt'])
 
-class Activities(object):
+class Activity(object):
     '''Advance toolkit for sport activity analyse'''
 
     def __init__(self,
@@ -26,7 +26,7 @@ class Activities(object):
     @staticmethod
     def from_gpx(gpx_file=''):
         activity_data = gpx.read(gpx_file)
-        return Activities(**activity_data)
+        return Activity(**activity_data)
 
     @staticmethod
     def to_gpx(gpx_file=''):
@@ -35,7 +35,7 @@ class Activities(object):
     @classmethod
     def from_tcx(cls, tcx_file=''):
         activity_data = tcx.read(gpx_file)
-        return Activities(**activity_data)
+        return Activity(**activity_data)
 
     @staticmethod
     def to_tcx(tcx_file=''):
@@ -50,7 +50,7 @@ class Activities(object):
 #        pass
 
     def __str__(self):
-        return "Activities({}, {})".format(self.name, self.time.strftime('%d-%m-%Y %H:%M'))
+        return "Activity({}, {})".format(self.name, self.time.strftime('%d-%m-%Y %H:%M'))
 
 class Track(object):
     '''Contains and compute info about segmented data'''
