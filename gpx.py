@@ -1,5 +1,8 @@
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 from datetime import datetime
+
+import activity
 
 strava_id = ['StravaGPX', 'strava.com Android']
 
@@ -80,7 +83,7 @@ class gpx(object):
         time = gpx._readTime(metadata, origin.time_format)
         trk_lst = []
         for seg in trkSeg:
-            trk_lst.append(gpx._readTrkSeg(seg, origin.time_format))
+            trk_lst.append(gpx._readTrkSeg(seg, time, origin.time_format))
         
         return {'origin': origin.__class__.__name__,
                 'name': trkName.text,
@@ -92,12 +95,49 @@ class gpx(object):
         time = meta.find('{}time'.format(gpx._xml_namespace)).text
         return datetime.strptime(time, time_format)
 
-    def _readTrkSeg(seg, time_format):
+    def _readTrkSeg(seg, time0, time_format):
         '''setup track points list from trkseg xml element'''
         lat, lon = float(seg.attrib['lon']), float(seg.attrib['lat'])
         alt, time, *hr = seg
         segDict = {'alt': float(alt.text),
-                      'time': datetime.strptime(time.text, time_format)}
+                      'time': time0 - datetime.strptime(time.text, time_format)}
         if (hr):            # this should be change (when new watch, just hr right now)
             segDict['hr'] = int(hr[0][0][0].text)
         return {**segDict, 'lat':lat, 'lon':lon}
+
+    @staticmethod
+    def prettify(elem):
+        """Return a pretty-printed XML string for the Element.
+        """
+        rough_string = ET.tostring(elem, 'utf-8')
+        reparsed = minidom.parseString(rough_string)
+        return reparsed.toprettyxml(indent="  ")
+
+    @staticmethod
+    def xml_insert(parent, name, text):
+        new_tag = ET.SubElement(parent, name)
+        new_tag.text = text
+        return new_tag
+
+    @staticmethod
+    def write(activity, filename):
+        time0 = activity.time
+        gpx_attr = {'version':'1.1',
+                     'creator':activity.origin,
+                     'xsi:schemaLocation':"http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd http://www.garmin.com/xmlschemas/GpxExtensions/v3 http://www.garmin.com/xmlschemas/GpxExtensionsv3.xsd http://www.garmin.com/xmlschemas/TrackPointExtension/v1 http://www.garmin.com/xmlschemas/TrackPointExtensionv1.xsd",
+                     'xmlns':"http://www.topografix.com/GPX/1/1",
+                     'xmlns:gpxtpx':"http://www.garmin.com/xmlschemas/TrackPointExtension/v1",
+                     'xmlns:gpxx':'http://www.garmin.com/xmlschemas/GpxExtensions/v3', 
+                     'xmlns:xsi':"http://www.w3.org/2001/XMLSchema-instance"}
+        root = ET.Element('gpx', gpx_attr)
+        metadata, trk = ET.SubElement(root, 'metadata'), ET.SubElement(root, 'trk')
+        gpx.xml_insert(metadata, 'time', time0.strftime(gpx.garmin.time_format))
+        gpx.xml_insert(trk, 'name', activity.name)
+        trkseg = gpx.xml_insert(trk, 'trkseg', activity.name)
+        for pt in activity.track:
+            lon, lat, alt = pt['point']
+            trkpt = ET.SubElement(trkseg, 'trkpt', {'lon':str(lon), 'lat':str(lat)})
+            gpx.xml_insert(trkpt, 'ele', str(alt))
+            gpx.xml_insert(trkpt, 'time', (time0 + pt['time']).strftime(gpx.garmin.time_format))
+        with open(filename, 'w') as f:
+            f.write(gpx.prettify(root))
