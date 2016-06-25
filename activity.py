@@ -41,6 +41,9 @@ class Activity(object):
     def to_tcx(tcx_file=''):
         pass
 
+    def __repr__(self):
+        pass
+
 #    @property
 #    def track(self):
 #        return self._track
@@ -63,6 +66,10 @@ class Track(object):
                 init[k].append(v)
         for k, v in init.items():
              self.k = v
+
+    def __repr__(self):
+        pass
+
         
 
 class tcx(object):

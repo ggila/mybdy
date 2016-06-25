@@ -62,6 +62,9 @@ class gpx(object):
     class strava(object):
         time_format = '%Y-%m-%dT%H:%M:%SZ'
 
+    def __repr__(self):
+        pass
+
     @staticmethod
     def read(gpx_file):
         '''return a dict describing activities'''
