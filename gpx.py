@@ -97,7 +97,7 @@ class gpx(object):
 
     def _readTrkSeg(seg, time0, time_format):
         '''setup track points list from trkseg xml element'''
-        lat, lon = float(seg.attrib['lon']), float(seg.attrib['lat'])
+        lat, lon = float(seg.attrib['lat']), float(seg.attrib['lon'])
         alt, time, *hr = seg
         segDict = {'alt': float(alt.text),
                       'time': time0 - datetime.strptime(time.text, time_format)}

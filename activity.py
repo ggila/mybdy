@@ -2,12 +2,12 @@ from datetime import datetime
 from collections import namedtuple, defaultdict
 from functools import reduce
 
-from geopy import distance
+from geopy.distance import vincenty
 
 from gpx import gpx
 from tcx import tcx
 
-Point = namedtuple('Point', ['lon', 'lat', 'alt'])
+Point = namedtuple('Point', ['lat', 'lon', 'alt'])
 
 class Activity(object):
     '''
@@ -50,7 +50,7 @@ class Activity(object):
         pass
 
     def __repr__(self):
-        pass
+        return "Activity({}, {})".format(self.name, self.time.strftime('%d-%m-%Y %H:%M'))
 
     def setTime(self, date):
         self.time = date
@@ -65,9 +65,6 @@ class Activity(object):
 #    def track(self, value):
 #        pass
 
-    def __str__(self):
-        return "Activity({}, {})".format(self.name, self.time.strftime('%d-%m-%Y %H:%M'))
-
 class Track(object):
     '''Contains and compute info about segmented data'''
 
@@ -79,10 +76,12 @@ class Track(object):
         for k in trkList[0]:
             if k not in ['lat', 'lon', 'alt']: self.field.append(k)
 
-        # Set up list od data
+        # Set up list of data
         init = defaultdict(list, [])
         for d in trkList:
-            init['point'].append(Point(d.pop('lon'), d.pop('lat'), d.pop('alt')))
+            init['point'].append(Point(d.pop('lat'), d.pop('lon'), d.pop('alt')))
+            init['dist'].append(0 if len(init['point']) == 1 else vincenty(init['point'][-1], init['point'][-2]))
+            print(init['dist'])
             for k, v in d.items():
                 init[k].append(v)
 
