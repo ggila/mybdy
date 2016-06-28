@@ -100,7 +100,7 @@ class gpx(object):
         lat, lon = float(seg.attrib['lat']), float(seg.attrib['lon'])
         alt, time, *hr = seg
         segDict = {'alt': float(alt.text),
-                      'time': time0 - datetime.strptime(time.text, time_format)}
+                      'time': datetime.strptime(time.text, time_format) - time0}
         if (hr):            # this should be change (when new watch, just hr right now)
             segDict['hr'] = int(hr[0][0][0].text)
         return {**segDict, 'lat':lat, 'lon':lon}

@@ -71,23 +71,26 @@ class Track(object):
     def __init__(self, trkList):
         self.length = len(trkList)
 
-        # For keeping tracks of field info
-        self.field = ['point']
-        for k in trkList[0]:
+        # Keeping tracks of suscriptable field
+        self.field = ['point', 'dist']
+#        self.field = ['point', 'dist', 'speed']
+        for k in trkList[0]:            #specific field
             if k not in ['lat', 'lon', 'alt']: self.field.append(k)
 
         # Set up list of data
         init = defaultdict(list, [])
         for d in trkList:
             init['point'].append(Point(d.pop('lat'), d.pop('lon'), d.pop('alt')))
-            init['dist'].append(0 if len(init['point']) == 1 else vincenty(init['point'][-1], init['point'][-2]))
-            print(init['dist'])
+            init['dist'].append(0 if len(init['point']) == 1 else vincenty(init['point'][-1], init['point'][-2]).km)
+#            print(init['dist'])
             for k, v in d.items():
                 init[k].append(v)
 
         self.point = init['point']
         for k, v in init.items():
             setattr(self, k, v)
+
+        self.Dist = sum(init['dist'])
 
     def __repr__(self):
         pass
@@ -99,4 +102,7 @@ class Track(object):
         return d
 
     def setDuration(self, delta):
-        self.time = [i/(self.length - 1) * delta for i in range(self.length)]
+        self.time, sum_dist = [], 0
+        for i in range(self.length):
+            sum_dist += self.dist[i]
+            self.time.append(sum_dist/self.Dist * delta)
