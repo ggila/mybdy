@@ -36,9 +36,12 @@ class Activity(object):
         activity_data = gpx.read(gpx_file)
         return Activity(**activity_data)
 
-    @staticmethod
-    def to_gpx(gpx_file=''):
-        pass
+    def to_gpx(self, gpx_file=''):
+        if !gpx_file:
+            if self.name: gpx_file = "{}.gpx".format(self.name)
+            else if self.time: gpx_file = "{}.gpx".format(self.time.strftime('%d-%m-%Y_%H:%M'))
+            else gpx_file = 'new_activity.gpx'
+        gpx.write(self, gpx_file)
 
     @classmethod
     def from_tcx(cls, tcx_file=''):

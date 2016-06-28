@@ -116,7 +116,7 @@ class gpx(object):
     @staticmethod
     def xml_insert(parent, name, text):
         new_tag = ET.SubElement(parent, name)
-        new_tag.text = text
+        if text: new_tag.text = text
         return new_tag
 
     @staticmethod
@@ -133,9 +133,9 @@ class gpx(object):
         metadata, trk = ET.SubElement(root, 'metadata'), ET.SubElement(root, 'trk')
         gpx.xml_insert(metadata, 'time', time0.strftime(gpx.garmin.time_format))
         gpx.xml_insert(trk, 'name', activity.name)
-        trkseg = gpx.xml_insert(trk, 'trkseg', activity.name)
+        trkseg = gpx.xml_insert(trk, 'trkseg', None)
         for pt in activity.track:
-            lon, lat, alt = pt['point']
+            lat, lon, alt = pt['point']
             trkpt = ET.SubElement(trkseg, 'trkpt', {'lon':str(lon), 'lat':str(lat)})
             gpx.xml_insert(trkpt, 'ele', str(alt))
             gpx.xml_insert(trkpt, 'time', (time0 + pt['time']).strftime(gpx.garmin.time_format))
