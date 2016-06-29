@@ -3,9 +3,11 @@ from collections import namedtuple, defaultdict
 from functools import reduce
 
 from geopy.distance import vincenty
+import pandas as pd
 
 from gpx import gpx
 from tcx import tcx
+#import myplt
 
 Point = namedtuple('Point', ['lat', 'lon', 'alt'])
 
@@ -28,6 +30,7 @@ class Activity(object):
         self.time = time
         if track:
             self.track = Track(track)
+            self.df = self.track.df
 #            self.point = [Point(a['lon'], a['lat'], a['alt']) for a in track['lst']]
 #            self.progression = [a['time'] - time for a in track['lst']]
 
@@ -37,10 +40,10 @@ class Activity(object):
         return Activity(**activity_data)
 
     def to_gpx(self, gpx_file=''):
-        if !gpx_file:
+        if gpx_file == '':
             if self.name: gpx_file = "{}.gpx".format(self.name)
-            else if self.time: gpx_file = "{}.gpx".format(self.time.strftime('%d-%m-%Y_%H:%M'))
-            else gpx_file = 'new_activity.gpx'
+            elif self.time: gpx_file = "{}.gpx".format(self.time.strftime('%d-%m-%Y_%H:%M'))
+            else: gpx_file = 'new_activity.gpx'
         gpx.write(self, gpx_file)
 
     @classmethod
@@ -75,7 +78,8 @@ class Track(object):
         self.length = len(trkList)
 
         # Keeping tracks of suscriptable field
-        self.field = ['point', 'dist']
+        self.field = ['point', 'dist', 'distSum']
+
 #        self.field = ['point', 'dist', 'speed']
         for k in trkList[0]:            #specific field
             if k not in ['lat', 'lon', 'alt']: self.field.append(k)
@@ -93,7 +97,10 @@ class Track(object):
         for k, v in init.items():
             setattr(self, k, v)
 
-        self.Dist = sum(init['dist'])
+        self.distSum = [sum(init['dist'][:i+1]) for i in range(self.length)]
+        self.Dist = self.distSum[-1]
+
+        self.df = pd.DataFrame({k:self[:][k] for k in self[0]})
 
     def __repr__(self):
         pass
@@ -103,6 +110,12 @@ class Track(object):
         for f in self.field:
             d[f] = getattr(self, f)[position]
         return d
+
+    def plotHR(self):
+        if not hasattr(self, 'hr'):
+            print('hr has not been recorded')
+        else:
+            ax = myplt.plt1Lst(self.hr)
 
     def setDuration(self, delta):
         self.time, sum_dist = [], 0
