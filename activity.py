@@ -1,6 +1,7 @@
 from datetime import datetime
 from collections import namedtuple, defaultdict
 from functools import reduce
+import time
 
 from geopy.distance import vincenty
 import pandas as pd
@@ -43,7 +44,9 @@ class Activity(object):
         if gpx_file == '':
             if self.name: gpx_file = "{}.gpx".format(self.name)
             elif self.time: gpx_file = "{}.gpx".format(self.time.strftime('%d-%m-%Y_%H:%M'))
-            else: gpx_file = 'new_activity.gpx'
+            else:
+                timestr = time.strftime("%d/%m/%Y_%H:%M/%S", time.localtime())
+                gpx_file = "Activity_{}.gpx".format(timestr)
         gpx.write(self, gpx_file)
 
     @classmethod
