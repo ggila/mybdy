@@ -37,10 +37,12 @@ class Activity(object):
         return Activity(**activity_data)
 
     def to_gpx(self, gpx_file=''):
-        if !gpx_file:
+        if gpx_file == '':
             if self.name: gpx_file = "{}.gpx".format(self.name)
-            else if self.time: gpx_file = "{}.gpx".format(self.time.strftime('%d-%m-%Y_%H:%M'))
-            else gpx_file = 'new_activity.gpx'
+            elif self.time: gpx_file = "{}.gpx".format(self.time.strftime('%d-%m-%Y_%H:%M'))
+            else:
+                timestr = time.strftime("%d/%m/%Y_%H:%M/%S", time.localtime())
+                gpx_file = "Activity_{}.gpx".format(timestr)
         gpx.write(self, gpx_file)
 
     @classmethod
